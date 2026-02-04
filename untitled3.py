@@ -52,7 +52,7 @@ def load_data():
         df['student_id'] = df['student_id'].astype(str).str.split('.').str[0].str.strip()
         
         # 数値項目の空欄を0で埋める
-        num_cols = ['debt', 'shift', 'shopping', 'prep', 'leader', 'insta', 'chief', 'accountant']
+        num_cols = ['base','debt', 'shift', 'shopping', 'prep', 'leader', 'insta', 'chief', 'accountant']
         df[num_cols] = df[num_cols].fillna(0)
         
         return df
