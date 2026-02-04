@@ -39,9 +39,9 @@ auth_pass = st.sidebar.text_input("パスワード", type="password", placeholde
 
 if auth_pass != ADMIN_PASSWORD:
     if auth_pass:
-        st.sidebar.error("パスワードが違います")
+        st.sidebar.error("パスワードが違う")
     st.title("工大祭 配当金確認")
-    st.info("サイドバーにパスワードを入力して開始してください")
+    st.info("サイドバーにパスワードを入力して開始してほしい")
     st.stop()
 
 # メインコンテンツ
@@ -75,7 +75,7 @@ if df is not None:
     # 「確認」ボタンを大きく表示
     if st.button('配当金を計算する', use_container_width=True, type="primary"):
         if not input_id:
-            st.warning("学籍番号を入れてください")
+            st.warning("学籍番号を入れてほしい")
         else:
             user_data = df[df['student_id'] == input_id]
 
@@ -128,9 +128,8 @@ if df is not None:
                         for d in role_details:
                             st.write(f"✅ {d}")
             else:
-                st.error('番号が見つからない...大文字・小文字を確認してね。')
-            print("工大祭に参加してくれてありがとう!!おかげで十分な利益を出すことができました!!これからもよろしくね")
+                st.error('番号が見つからない。大文字・小文字を確認してほしい。')
 
     # フッター：スマホでスクロールした際に見やすく
     st.markdown("---")
-    st.caption("© 寺田響希　分配金管理システム")
+    st.caption("© 寺田響希 分配金管理システム")
