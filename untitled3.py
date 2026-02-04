@@ -1,139 +1,135 @@
 import streamlit as st
 import pandas as pd
 
-# --- 設定：単価 (ファイル内の表に基づく) ---
+# --- 設定：単価 ---
 RATES = {
-    'BASE': 300,          # 基本給
-    'SHIFT': 400,         # シフト手当 (時給)
-    'SHOPPING': 600,      # 買い出し手当 (回)
-    'PREP': 400,          # 準備・片付け手当 (回)
-    'DEBT': 4500,         # 借りたお金 (立替金など)
-    'LEADER': 5000,       # 責任者手当
-    'INSTA': 1000,        # インスタ手当
-    'CHIEF': 2000,        # 係長手当
-    'ACCOUNTANT': 2000    # 会計手当
+    'BASE': 300,
+    'SHIFT': 400,
+    'SHOPPING': 600,
+    'PREP': 400,
+    'DEBT': 4500,
+    'LEADER': 5000,
+    'INSTA': 1000,
+    'CHIEF': 2000,
+    'ACCOUNTANT': 2000
 }
 
-# 管理用パスワード（適宜変更してほしい）
 ADMIN_PASSWORD = "Chijimi"
 
-# ----------------------------------------
+# 画面設定：スマホで見やすいようワイドモードをオフにし、タイトルを短く
+st.set_page_config(page_title="配当金確認", layout="centered")
 
-st.set_page_config(page_title="文化祭配当金確認システム", layout="centered")
+# カスタムCSS：スマホでの視認性向上（フォントサイズ調整など）
+st.markdown("""
+    <style>
+    .main {
+        padding-top: 10px;
+    }
+    .stMetric {
+        background-color: #f0f2f6;
+        padding: 15px;
+        border-radius: 10px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-# サイドバーで簡易ログイン
+# サイドバー認証
 st.sidebar.title("認証")
-auth_pass = st.sidebar.text_input("パスワードを入力", type="password")
+auth_pass = st.sidebar.text_input("パスワード", type="password", placeholder="合言葉を入力")
 
 if auth_pass != ADMIN_PASSWORD:
     if auth_pass:
-        st.sidebar.error("パスワードが違う")
-    st.title("文化祭配当金 確認システム")
-    st.warning("閲覧するには正しいパスワードを左のメニューに入力してください")
+        st.sidebar.error("パスワードが違います")
+    st.title("工大祭 配当金確認")
+    st.info("サイドバーにパスワードを入力して開始してください")
     st.stop()
 
-st.title('文化祭配当金 確認システム')
+# メインコンテンツ
+st.title('💰 配当金確認')
 
 @st.cache_data
 def load_data():
     file_name = '工大祭分配金.xlsx'
     try:
-        # 2行目をヘッダーとして読み込む
         df = pd.read_excel(file_name, header=1)
-
-        # 必要な列をインデックスで抽出
         df = df.iloc[:, [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]]
         df.columns = [
             'student_id', 'name', 'base','debt', 'shift', 'shopping', 'prep',
             'leader', 'insta', 'chief', 'accountant'
         ]
-
-        # 学籍番号のクリーニング：数値として読み込まれた際の ".0" を削除
         df['student_id'] = df['student_id'].astype(str).str.split('.').str[0].str.strip()
-        
-        # 数値項目の空欄を0で埋める
         num_cols = ['base','debt', 'shift', 'shopping', 'prep', 'leader', 'insta', 'chief', 'accountant']
         df[num_cols] = df[num_cols].fillna(0)
-        
         return df
-
-    except FileNotFoundError:
-        return None
     except Exception as e:
-        st.error(f"エラーが発生した: {e}")
+        st.error(f"ファイル読み込みエラー: {e}")
         return None
 
 df = load_data()
 
-if df is None:
-    st.error('Excelファイル (工大祭分配金.xlsx) が見つからない、または読み込めない。')
-    st.stop()
+if df is not None:
+    # スマホで打ちやすいよう、大文字に自動変換する案内
+    st.write('学籍番号を入力（例: 25B12345）')
+    input_id = st.text_input('学籍番号', placeholder='ここをタップして入力').strip().upper()
 
-# 検索フォーム
-st.write('学籍番号を入力して「確認する」を押してください')
-input_id = st.text_input('学籍番号', placeholder='例: 25B12345').strip()
-
-if st.button('確認する'):
-    if not input_id:
-        st.warning("学籍番号を入力してください")
-    else:
-        # 学籍番号で検索
-        user_data = df[df['student_id'] == input_id]
-
-        if not user_data.empty:
-            row = user_data.iloc[0]
-            name = row['name']
-
-            # --- 計算ロジック ---
-            base_pay = row['base']*RATES['BASE']
-            shift_pay = row['shift'] * RATES['SHIFT']
-            shop_pay = row['shopping'] * RATES['SHOPPING']
-            prep_pay = row['prep'] * RATES['PREP']
-            debt_pay = row['debt'] * RATES['DEBT'] 
-
-            # 役職手当
-            role_pay = 0
-            role_details = []
-            roles = [
-                ('base','BASE',"基本給"),
-                ('leader', 'LEADER', "責任者"),
-                ('insta', 'INSTA', "インスタ"),
-                ('chief', 'CHIEF', "係長"),
-                ('accountant', 'ACCOUNTANT', "会計")
-            ]
-
-            for col, rate_key, label in roles:
-                if row[col] == 1:
-                    role_pay += RATES[rate_key]
-                    role_details.append(f"{label} (+¥{RATES[rate_key]:,})")
-
-            # 総額
-            total = base_pay + shift_pay + shop_pay + prep_pay + debt_pay + role_pay
-
-            # --- 結果表示 ---
-            st.subheader(f'{name} さんの配当金')
-            st.metric(label="支給総額", value=f"¥{int(total):,}")
-
-            with st.expander("内訳を確認する", expanded=True):
-
-                if base_pay > 0:
-                    st.markdown(f"**基本給:** {row['base']} × @{RATES['BASE']} = ¥{int(base_pay):,}")
-
-                if shift_pay > 0:
-                    st.markdown(f"**シフト:** {row['shift']}h × @{RATES['SHIFT']} = ¥{int(shift_pay):,}")
-
-                if prep_pay > 0:
-                    st.markdown(f"**準備・片付:** {int(row['prep'])}回 × @{RATES['PREP']} = ¥{int(prep_pay):,}")
-
-                if shop_pay > 0:
-                    st.markdown(f"**買い出し:** {int(row['shopping'])}回 × @{RATES['SHOPPING']} = ¥{int(shop_pay):,}")
-
-                if debt_pay > 0:
-                    st.markdown(f"**立替金返済など:** ¥{int(debt_pay):,}")
-
-                if role_details:
-                    st.markdown("**役職手当:**")
-                    for d in role_details:
-                        st.markdown(f"- {d}")
+    # 「確認」ボタンを大きく表示
+    if st.button('配当金を計算する', use_container_width=True, type="primary"):
+        if not input_id:
+            st.warning("学籍番号を入れてください")
         else:
-            st.error('その番号は見つからない。入力ミスか、リストに載っていない可能性がある。')
+            user_data = df[df['student_id'] == input_id]
+
+            if not user_data.empty:
+                row = user_data.iloc[0]
+                
+                # 計算
+                base_pay = row['base'] * RATES['BASE']
+                shift_pay = row['shift'] * RATES['SHIFT']
+                shop_pay = row['shopping'] * RATES['SHOPPING']
+                prep_pay = row['prep'] * RATES['PREP']
+                debt_pay = row['debt'] * RATES['DEBT']
+
+                role_pay = 0
+                role_details = []
+                # 基本給は個別に表示するためrolesからは除外
+                roles = [
+                    ('leader', 'LEADER', "責任者"),
+                    ('insta', 'INSTA', "インスタ"),
+                    ('chief', 'CHIEF', "係長"),
+                    ('accountant', 'ACCOUNTANT', "会計")
+                ]
+
+                for col, rate_key, label in roles:
+                    if row[col] == 1:
+                        role_pay += RATES[rate_key]
+                        role_details.append(f"{label} (+¥{RATES[rate_key]:,})")
+
+                total = base_pay + shift_pay + shop_pay + prep_pay + debt_pay + role_pay
+
+                # 表示
+                st.subheader(f'👤 {row["name"]} さん')
+                st.metric(label="合計支給額", value=f"¥{int(total):,}")
+
+                with st.expander("💸 明細を確認する", expanded=True):
+                    if base_pay > 0:
+                        st.write(f"**基本給:** ¥{int(base_pay):,}")
+                    if shift_pay > 0:
+                        st.write(f"**シフト:** {row['shift']}h → ¥{int(shift_pay):,}")
+                    if prep_pay > 0:
+                        st.write(f"**準備・片付:** {int(row['prep'])}回 → ¥{int(prep_pay):,}")
+                    if shop_pay > 0:
+                        st.write(f"**買い出し:** {int(row['shopping'])}回 → ¥{int(shop_pay):,}")
+                    if debt_pay > 0:
+                        st.write(f"**立替金返済:** ¥{int(debt_pay):,}")
+                    
+                    if role_details:
+                        st.divider()
+                        st.write("**役職手当:**")
+                        for d in role_details:
+                            st.write(f"✅ {d}")
+            else:
+                st.error('番号が見つからない...大文字・小文字を確認してね。')
+
+    # フッター：スマホでスクロールした際に見やすく
+    st.markdown("---")
+    st.caption("© 2026 工大祭実行委員会 分配金管理システム")
