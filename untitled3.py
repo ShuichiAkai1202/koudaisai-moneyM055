@@ -15,7 +15,7 @@ RATES = {
 }
 
 # 管理用パスワード（適宜変更してほしい）
-ADMIN_PASSWORD = "koudaisai_pass"
+ADMIN_PASSWORD = "Chijimi"
 
 # ----------------------------------------
 
