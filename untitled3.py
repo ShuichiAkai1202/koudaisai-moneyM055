@@ -115,7 +115,9 @@ if st.button('確認する'):
             st.metric(label="支給総額", value=f"¥{int(total):,}")
 
             with st.expander("内訳を確認する", expanded=True):
-                st.markdown(f"**基本給:** ¥{RATES['BASE']:,}")
+
+                if base_pay > 0:
+                    st.markdown(f"**基本給:** {row['base']} × @{RATES['Base']} = ¥{int(base_pay):,}")
 
                 if shift_pay > 0:
                     st.markdown(f"**シフト:** {row['shift']}h × @{RATES['SHIFT']} = ¥{int(shift_pay):,}")
