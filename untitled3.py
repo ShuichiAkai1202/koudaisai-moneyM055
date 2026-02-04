@@ -117,7 +117,7 @@ if st.button('確認する'):
             with st.expander("内訳を確認する", expanded=True):
 
                 if base_pay > 0:
-                    st.markdown(f"**基本給:** {row['base']} × @{RATES['Base']} = ¥{int(base_pay):,}")
+                    st.markdown(f"**基本給:** {row['base']} × @{RATES['BASE']} = ¥{int(base_pay):,}")
 
                 if shift_pay > 0:
                     st.markdown(f"**シフト:** {row['shift']}h × @{RATES['SHIFT']} = ¥{int(shift_pay):,}")
