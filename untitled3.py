@@ -95,7 +95,7 @@ if st.button('確認する'):
             role_pay = 0
             role_details = []
             roles = [
-                ('base','BASE',"基本給")
+                ('base','BASE',"基本給"),
                 ('leader', 'LEADER', "責任者"),
                 ('insta', 'INSTA', "インスタ"),
                 ('chief', 'CHIEF', "係長"),
