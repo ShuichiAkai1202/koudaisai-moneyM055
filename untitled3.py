@@ -5,13 +5,13 @@ import pandas as pd
 RATES = {
     'BASE': 300,
     'SHIFT': 400,
-    'SHOPPING': 600,
+    'SHOPPING': 500,
     'PREP': 400,
     'DEBT': 4500,
     'LEADER': 5000,
     'INSTA': 1000,
-    'CHIEF': 2000,
-    'ACCOUNTANT': 2000
+    'CHIEF': 1500,
+    'ACCOUNTANT': 1500
 }
 
 ADMIN_PASSWORD = "Chijimi"
